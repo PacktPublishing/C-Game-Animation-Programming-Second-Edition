@@ -94,31 +94,31 @@ class VkRenderer {
 
     std::vector<glm::mat4> mPerspViewMatrices{};
 
-    bool deviceInit(VkRenderData &renderData);
+    bool deviceInit();
     bool getQueue();
-    bool createDepthBuffer(VkRenderData &renderData);
-    bool createVBO(VkRenderData &renderData);
-    bool createUBO(VkRenderData &renderData, VkUniformBufferData &UBOData,
+    bool createDepthBuffer();
+    bool createVBO();
+    bool createUBO(VkUniformBufferData &UBOData,
       std::vector<glm::mat4> matricesToUpload);
-    bool createMatrixSSBO(VkRenderData &renderData, VkShaderStorageBufferData &SSBOData);
-    bool createDQSSBO(VkRenderData &renderData, VkShaderStorageBufferData &SSBOData);
-    bool createSwapchain(VkRenderData &renderData);
-    bool createRenderPass(VkRenderData &renderData);
-    bool createGltfPipelineLayout(VkRenderData& renderData, VkTextureData textureData);
-    bool createLinePipeline(VkRenderData& renderData);
-    bool createGltfSkeletonPipeline(VkRenderData& renderData);
-    bool createGltfGPUPipeline(VkRenderData& renderData);
-    bool createGltfGPUDQPipeline(VkRenderData& renderData);
-    bool createFramebuffer(VkRenderData &renderData);
-    bool createCommandPool(VkRenderData &renderData);
-    bool createCommandBuffer(VkRenderData &renderData);
-    bool createSyncObjects(VkRenderData &renderData);
-    bool loadTexture(VkRenderData &renderData, VkTextureData &textureData);
-    bool initUserInterface(VkRenderData &renderData);
-    bool loadGltfModel(VkRenderData &renderData);
-    bool createInstances(VkRenderData &renderData);
+    bool createMatrixSSBO(VkShaderStorageBufferData &SSBOData);
+    bool createDQSSBO(VkShaderStorageBufferData &SSBOData);
+    bool createSwapchain();
+    bool createRenderPass();
+    bool createGltfPipelineLayout(VkTextureData textureData);
+    bool createLinePipeline();
+    bool createGltfSkeletonPipeline();
+    bool createGltfGPUPipeline();
+    bool createGltfGPUDQPipeline();
+    bool createFramebuffer();
+    bool createCommandPool();
+    bool createCommandBuffer();
+    bool createSyncObjects();
+    bool loadTexture(VkTextureData &textureData);
+    bool initUserInterface();
+    bool loadGltfModel();
+    bool createInstances();
 
     bool initVma();
 
-    bool recreateSwapchain(VkRenderData &renderData);
+    bool recreateSwapchain();
 };

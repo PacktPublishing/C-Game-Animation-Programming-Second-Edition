@@ -1,6 +1,8 @@
 #include "ShaderStorageBuffer.h"
 #include "Logger.h"
 
+#include <VkBootstrap.h>
+
 bool ShaderStorageBuffer::init(VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
     size_t bufferSize) {
   VkBufferCreateInfo bufferInfo{};

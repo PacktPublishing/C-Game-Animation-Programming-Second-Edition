@@ -1,6 +1,8 @@
 #include "ShaderStorageBuffer.h"
 #include "Logger.h"
 
+#include <VkBootstrap.h>
+
 bool ShaderStorageBuffer::init(VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
     std::vector<glm::mat4> matricesToUpload) {
   VkBufferCreateInfo bufferInfo{};

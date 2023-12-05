@@ -1,7 +1,9 @@
 /* Vulkan shader storage buffer object */
 #pragma once
 
+#include <vector>
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 #include "VkRenderData.h"
 

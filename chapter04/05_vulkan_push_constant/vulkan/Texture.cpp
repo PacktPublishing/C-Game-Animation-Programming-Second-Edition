@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "CommandBuffer.h"
 #include "Texture.h"
 #include "Logger.h"
 
@@ -156,22 +157,22 @@ bool Texture::loadTexture(VkRenderData &renderData, std::string textureFilename)
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   if (vkCreateFence(renderData.rdVkbDevice.device, &fenceInfo, nullptr, &stagingBufferFence) != VK_SUCCESS) {
-    Logger::log(1, "%s error: failed to staging buffer fence\n", __FUNCTION__);
+    Logger::log(1, "%s error: failed to create staging buffer fence\n", __FUNCTION__);
     return false;
   }
 
   if (vkResetFences(renderData.rdVkbDevice.device, 1, &stagingBufferFence) != VK_SUCCESS) {
-    Logger::log(1, "%s error: staging buffer fence reset failed", __FUNCTION__);
+    Logger::log(1, "%s error: staging buffer fence reset failed\n", __FUNCTION__);
     return false;
   }
 
   if (vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, stagingBufferFence) != VK_SUCCESS) {
-    Logger::log(1, "%s error: failed to staging buffer copy command buffer\n", __FUNCTION__);
+    Logger::log(1, "%s error: failed to submit staging buffer copy command buffer\n", __FUNCTION__);
     return false;
   }
 
   if (vkWaitForFences(renderData.rdVkbDevice.device, 1, &stagingBufferFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
-    Logger::log(1, "%s error: waiting for staging buffer copy fence failed", __FUNCTION__);
+    Logger::log(1, "%s error: waiting for staging buffer copy fence failed\n", __FUNCTION__);
     return false;
   }
 

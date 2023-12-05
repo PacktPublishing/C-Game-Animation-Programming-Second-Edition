@@ -1,6 +1,8 @@
 #include "UniformBuffer.h"
 #include "Logger.h"
 
+#include <VkBootstrap.h>
+
 bool UniformBuffer::init(VkRenderData& renderData) {
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
