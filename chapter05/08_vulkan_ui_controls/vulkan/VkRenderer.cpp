@@ -459,7 +459,6 @@ bool VkRenderer::draw() {
       &imageIndex);
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-    mRenderData.rdFrameTime = mFrameTimer.stop();
     return recreateSwapchain();
   } else {
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -612,7 +611,6 @@ bool VkRenderer::draw() {
 
   result = vkQueuePresentKHR(mRenderData.rdPresentQueue, &presentInfo);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-    mRenderData.rdFrameTime = mFrameTimer.stop();
     return recreateSwapchain();
   } else {
     if (result != VK_SUCCESS) {
