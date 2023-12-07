@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <cstring>
 
 #include "CommandBuffer.h"
 #include "Texture.h"
@@ -62,7 +63,7 @@ bool Texture::loadTexture(VkRenderData &renderData, std::string textureFilename)
 
   void* data;
   vmaMapMemory(renderData.rdAllocator, stagingBufferAlloc, &data);
-  memcpy(data, textureData, static_cast<uint32_t>(imageSize));
+  std::memcpy(data, textureData, static_cast<uint32_t>(imageSize));
   vmaUnmapMemory(renderData.rdAllocator, stagingBufferAlloc);
 
   stbi_image_free(textureData);

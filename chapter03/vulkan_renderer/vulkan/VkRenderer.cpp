@@ -1,3 +1,4 @@
+#include <cstring>
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -352,7 +353,7 @@ bool VkRenderer::uploadData(VkMesh vertexData) {
 
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mVertexBufferAlloc, &data);
-  memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
+  std::memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
   vmaUnmapMemory(mRenderData.rdAllocator, mVertexBufferAlloc);
 
   mTriangleCount = vertexData.vertices.size() / 3;

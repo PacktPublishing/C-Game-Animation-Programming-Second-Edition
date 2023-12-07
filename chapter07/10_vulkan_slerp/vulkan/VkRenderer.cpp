@@ -1,3 +1,4 @@
+#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -792,7 +793,7 @@ bool VkRenderer::draw() {
   mUploadToUBOTimer.start();
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-  memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
+  std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
   vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 

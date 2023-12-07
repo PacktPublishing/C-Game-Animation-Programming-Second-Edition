@@ -1,3 +1,4 @@
+#include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define VMA_IMPLEMENTATION
@@ -377,7 +378,7 @@ bool VkRenderer::uploadData(VkMesh vertexData) {
 
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mVertexBufferAlloc, &data);
-  memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
+  std::memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
   vmaUnmapMemory(mRenderData.rdAllocator, mVertexBufferAlloc);
 
   mTriangleCount = vertexData.vertices.size() / 3;

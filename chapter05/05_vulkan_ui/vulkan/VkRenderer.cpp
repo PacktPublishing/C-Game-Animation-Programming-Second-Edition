@@ -1,3 +1,4 @@
+#include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
@@ -416,7 +417,7 @@ bool VkRenderer::uploadData(VkMesh vertexData) {
 
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mVertexBufferAlloc, &data);
-  memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
+  std::memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
   vmaUnmapMemory(mRenderData.rdAllocator, mVertexBufferAlloc);
 
   mRenderData.rdTriangleCount = vertexData.vertices.size() / 3;
@@ -561,7 +562,7 @@ bool VkRenderer::draw() {
   /* upload UBO data after commands are created */
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-  memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
+  std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
   vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
 
   /* submit command buffer */

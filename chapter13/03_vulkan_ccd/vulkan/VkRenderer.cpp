@@ -1,3 +1,4 @@
+#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -906,7 +907,7 @@ bool VkRenderer::draw() {
   void* data;
   vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc,
     &data);
-  memcpy(data, mPerspViewMatrices.data(),
+  std::memcpy(data, mPerspViewMatrices.data(),
     static_cast<uint32_t>(mPerspViewMatrices.size() * sizeof(glm::mat4)));
   vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc);
 
@@ -914,14 +915,14 @@ bool VkRenderer::draw() {
     std::vector<glm::mat2x4> jointDualQuats = mGltfModel->getJointDualQuats();
     vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc,
       &data);
-    memcpy(data, jointDualQuats.data(),
+    std::memcpy(data, jointDualQuats.data(),
       static_cast<uint32_t>(jointDualQuats.size() * sizeof(glm::mat2x4)));
     vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc);
   } else {
     std::vector<glm::mat4> jointMatrices = mGltfModel->getJointMatrices();
     vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixSSBO.rdSsboBufferAlloc,
       &data);
-    memcpy(data, jointMatrices.data(),
+    std::memcpy(data, jointMatrices.data(),
       static_cast<uint32_t>(jointMatrices.size() * sizeof(glm::mat4)));
     vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixSSBO.rdSsboBufferAlloc);
   }
