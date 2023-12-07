@@ -1,7 +1,6 @@
 #include "UniformBuffer.h"
 #include "Logger.h"
 
-#include <glm/glm.hpp>
 #include <VkBootstrap.h>
 
 bool UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData &UBOData,

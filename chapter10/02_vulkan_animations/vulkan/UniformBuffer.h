@@ -1,6 +1,7 @@
 /* Vulkan uniform buffer object */
 #pragma once
 
+#include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
 #include "VkRenderData.h"
