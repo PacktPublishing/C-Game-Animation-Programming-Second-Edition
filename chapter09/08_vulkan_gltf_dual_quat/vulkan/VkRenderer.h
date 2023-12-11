@@ -118,16 +118,12 @@ class VkRenderer {
     bool getQueue();
     bool createDepthBuffer();
     bool createVBO();
-    bool createUBO(VkUniformBufferData &UBOData,
-      std::vector<glm::mat4> matricesToUpload);
-    bool createSSBO(VkShaderStorageBufferData &SSBOData,
-      std::vector<glm::mat4> matricesToUpload);
-    bool createSSBO(VkShaderStorageBufferData &SSBOData,
-      std::vector<glm::mat2x4> matricesToUpload);
+    bool createUBO();
+    bool createMatrixSSBO();
+    bool createDQSSBO();
     bool createSwapchain();
     bool createRenderPass();
     bool createPipelineLayout();
-    bool createBasicPipeline();
     bool createLinePipeline();
     bool createGltfPipelineLayout();
     bool createGltfPipeline();

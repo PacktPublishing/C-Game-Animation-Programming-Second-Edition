@@ -5,7 +5,7 @@
 #include "Logger.h"
 
 bool IndexBuffer::init(VkRenderData &renderData, VkIndexBufferData &indexBufferData,
-  unsigned int bufferSize) {
+  size_t bufferSize) {
   /* vertex buffer */
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

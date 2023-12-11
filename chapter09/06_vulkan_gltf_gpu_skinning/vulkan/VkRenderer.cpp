@@ -1,4 +1,3 @@
-#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -55,11 +54,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
   }
 
   /* we need the command pool */
-  if (!loadTexture(mRenderData.rdModelTexture)) {
+  if (!loadTexture()) {
     return false;
   }
 
-  if (!createUBO(mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices)) {
+  if (!createUBO()) {
     return false;
   }
 
@@ -68,7 +67,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
 
-  if (!createUBO(mRenderData.rdJointMatrixUBO, mGltfModel->getJointMatrices())) {
+  if (!createMatrixUBO()) {
     return false;
   }
 
@@ -311,9 +310,20 @@ bool VkRenderer::createVBO() {
   return true;
 }
 
-bool VkRenderer::createUBO(VkUniformBufferData &UBOData,
-  std::vector<glm::mat4> matricesToUpload) {
-  if (!UniformBuffer::init(mRenderData, UBOData, matricesToUpload)) {
+bool VkRenderer::createUBO() {
+  size_t matrixSize = mPerspViewMatrices.size() * sizeof(glm::mat4);
+
+  if (!UniformBuffer::init(mRenderData, mRenderData.rdPerspViewMatrixUBO, matrixSize)) {
+    Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
+    return false;
+  }
+  return true;
+}
+
+bool VkRenderer::createMatrixUBO() {
+  size_t matrixSize = mGltfModel->getJointMatrices().size() * sizeof(glm::mat4);
+
+  if (!UniformBuffer::init(mRenderData, mRenderData.rdJointMatrixUBO, matrixSize)) {
     Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
     return false;
   }
@@ -427,9 +437,9 @@ bool VkRenderer::createSyncObjects() {
   return true;
 }
 
-bool VkRenderer::loadTexture(VkTextureData& textureData) {
+bool VkRenderer::loadTexture() {
   std::string textureFileName = "textures/crate.png";
-  if (!Texture::loadTexture(mRenderData, textureData, textureFileName)) {
+  if (!Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName)) {
     Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
     return false;
   }
@@ -932,21 +942,10 @@ bool VkRenderer::draw() {
 
   /* upload UBO data after commands are created */
   mUploadToUBOTimer.start();
-  void* data;
-  vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc,
-    &data);
-  std::memcpy(data, mPerspViewMatrices.data(),
-    static_cast<uint32_t>(mPerspViewMatrices.size() * sizeof(glm::mat4)));
-  vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc);
 
-  if (mRenderData.rdGPUVertexSkinning) {
-    std::vector<glm::mat4> jointMatrices = mGltfModel->getJointMatrices();
-    vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixUBO.rdUboBufferAlloc,
-      &data);
-    std::memcpy(data, jointMatrices.data(),
-      static_cast<uint32_t>(jointMatrices.size() * sizeof(glm::mat4)));
-    vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixUBO.rdUboBufferAlloc);
-  }
+  UniformBuffer::uploadData(mRenderData, mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices);
+  UniformBuffer::uploadData(mRenderData, mRenderData.rdJointMatrixUBO, mGltfModel->getJointMatrices());
+
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
   /* submit command buffer */

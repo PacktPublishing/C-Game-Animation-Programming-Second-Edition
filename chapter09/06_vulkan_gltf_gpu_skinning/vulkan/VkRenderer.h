@@ -117,7 +117,8 @@ class VkRenderer {
     bool getQueue();
     bool createDepthBuffer();
     bool createVBO();
-    bool createUBO(VkUniformBufferData &UBOData, std::vector<glm::mat4> matricesToUpload);
+    bool createUBO();
+    bool createMatrixUBO();
     bool createSwapchain();
     bool createRenderPass();
     bool createPipelineLayout();
@@ -131,7 +132,7 @@ class VkRenderer {
     bool createCommandPool();
     bool createCommandBuffer();
     bool createSyncObjects();
-    bool loadTexture(VkTextureData &textureData);
+    bool loadTexture();
     bool initUserInterface();
     bool loadGltfModel();
 

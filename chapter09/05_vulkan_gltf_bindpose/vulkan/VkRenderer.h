@@ -128,7 +128,7 @@ class VkRenderer {
     bool createCommandPool();
     bool createCommandBuffer();
     bool createSyncObjects();
-    bool loadTexture(VkTextureData &textureData);
+    bool loadTexture();
     bool initUserInterface();
     bool loadGltfModel();
 

@@ -1,4 +1,3 @@
-#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -796,10 +795,9 @@ bool VkRenderer::draw() {
 
   /* upload UBO data after commands are created */
   mUploadToUBOTimer.start();
-  void* data;
-  vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-  std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
-  vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
+
+  UniformBuffer::uploadData(mRenderData, mMatrices);
+
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
   /* submit command buffer */

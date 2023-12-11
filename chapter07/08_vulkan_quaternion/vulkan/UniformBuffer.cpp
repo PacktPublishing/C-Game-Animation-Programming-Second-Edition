@@ -78,6 +78,13 @@ bool UniformBuffer::init(VkRenderData& renderData) {
 	return true;
 }
 
+void UniformBuffer::uploadData(VkRenderData &renderData, VkUploadMatrices matrices) {
+  void* data;
+  vmaMapMemory(renderData.rdAllocator, renderData.rdUboBufferAlloc, &data);
+  std::memcpy(data, &matrices, sizeof(VkUploadMatrices));
+  vmaUnmapMemory(renderData.rdAllocator, renderData.rdUboBufferAlloc);
+}
+
 void UniformBuffer::cleanup(VkRenderData& renderData) {
   vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdUBODescriptorPool, nullptr);
   vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdUBODescriptorLayout, nullptr);

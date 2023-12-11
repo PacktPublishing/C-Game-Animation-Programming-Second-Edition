@@ -1,4 +1,3 @@
-#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -56,7 +55,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
   }
 
   /* we need the command pool */
-  if (!loadTexture(mRenderData.rdModelTexture)) {
+  if (!loadTexture()) {
     return false;
   }
 
@@ -420,9 +419,9 @@ bool VkRenderer::createSyncObjects() {
   return true;
 }
 
-bool VkRenderer::loadTexture(VkTextureData& textureData) {
+bool VkRenderer::loadTexture() {
   std::string textureFileName = "textures/crate.png";
-  if (!Texture::loadTexture(mRenderData, textureData, textureFileName)) {
+  if (!Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName)) {
     Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
     return false;
   }
@@ -898,10 +897,9 @@ bool VkRenderer::draw() {
 
   /* upload UBO data after commands are created */
   mUploadToUBOTimer.start();
-  void* data;
-  vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-  std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
-  vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
+
+  UniformBuffer::uploadData(mRenderData, mMatrices);
+
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
   /* submit command buffer */

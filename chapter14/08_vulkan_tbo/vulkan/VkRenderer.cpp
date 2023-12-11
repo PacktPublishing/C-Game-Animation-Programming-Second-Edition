@@ -1,4 +1,3 @@
-#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,7 +60,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
 
-  if (!createUBO(mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices)) {
+  if (!createUBO()) {
     return false;
   }
   /* before pipeline layout and pipeline */
@@ -73,11 +72,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
 
-  if (!createMatrixTBO(mRenderData.rdJointMatrixTBO)) {
+  if (!createMatrixTBO()) {
     return false;
   }
 
-  if (!createDQSSBO(mRenderData.rdJointDualQuatSSBO)) {
+  if (!createDQSSBO()) {
     return false;
   }
 
@@ -89,7 +88,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
 
-  if (!createGltfPipelineLayout(mGltfModel->getVkTextureData())) {
+  if (!createGltfPipelineLayout()) {
       return false;
   }
 
@@ -307,31 +306,31 @@ bool VkRenderer::createVBO() {
   return true;
 }
 
-bool VkRenderer::createUBO(VkUniformBufferData &UBOData,
-  std::vector<glm::mat4> matricesToUpload) {
-  if (!UniformBuffer::init(mRenderData, UBOData, matricesToUpload)) {
+bool VkRenderer::createUBO() {
+  size_t matrixSize = mPerspViewMatrices.size() * sizeof(glm::mat4);
+  if (!UniformBuffer::init(mRenderData, mRenderData.rdPerspViewMatrixUBO, matrixSize)) {
     Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
     return false;
   }
   return true;
 }
 
-bool VkRenderer::createMatrixTBO(VkTexelBufferData &TBOData) {
-  size_t modelJointMatrixBufferSize = mRenderData.rdNumberOfInstances * mGltfInstances.at(0)->getJointMatrixSize() *
-    sizeof(glm::mat4);
+bool VkRenderer::createMatrixTBO() {
+  size_t modelJointMatrixBufferSize = mRenderData.rdNumberOfInstances *
+    mGltfInstances.at(0)->getJointMatrixSize() * sizeof(glm::mat4);
 
-  if (!TexelBuffer::init(mRenderData, TBOData, modelJointMatrixBufferSize)) {
+  if (!TexelBuffer::init(mRenderData, mRenderData.rdJointMatrixTBO, modelJointMatrixBufferSize)) {
     Logger::log(1, "%s error: could not create shader storage buffers\n", __FUNCTION__);
     return false;
   }
   return true;
 }
 
-bool VkRenderer::createDQSSBO(VkShaderStorageBufferData &SSBOData) {
-  size_t modelJointDualQuatBufferSize = mRenderData.rdNumberOfInstances * mGltfInstances.at(0)->getJointDualQuatsSize() *
-    sizeof(glm::mat2x4);
+bool VkRenderer::createDQSSBO() {
+  size_t modelJointDualQuatBufferSize = mRenderData.rdNumberOfInstances *
+    mGltfInstances.at(0)->getJointDualQuatsSize() * sizeof(glm::mat2x4);
 
-  if (!ShaderStorageBuffer::init(mRenderData, SSBOData, modelJointDualQuatBufferSize)) {
+  if (!ShaderStorageBuffer::init(mRenderData, mRenderData.rdJointDualQuatSSBO, modelJointDualQuatBufferSize)) {
     Logger::log(1, "%s error: could not create shader storage buffers\n", __FUNCTION__);
     return false;
   }
@@ -346,23 +345,24 @@ bool VkRenderer::createRenderPass() {
   }
   return true;
 }
-bool VkRenderer::createGltfPipelineLayout(VkTextureData textureData) {
-    if (!PipelineLayout::init(mRenderData, textureData, mRenderData.rdGltfPipelineLayout)) {
-        Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
-        return false;
-    }
-    return true;
+bool VkRenderer::createGltfPipelineLayout() {
+  VkTextureData texData = mGltfModel->getVkTextureData();
+  if (!PipelineLayout::init(mRenderData, texData, mRenderData.rdGltfPipelineLayout)) {
+      Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
+      return false;
+  }
+  return true;
 }
 
 bool VkRenderer::createLinePipeline() {
-    std::string vertexShaderFile = "shader/line.vert.spv";
-    std::string fragmentShaderFile = "shader/line.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdLinePipeline,
-        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile)) {
-        Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
-        return false;
-    }
-    return true;
+  std::string vertexShaderFile = "shader/line.vert.spv";
+  std::string fragmentShaderFile = "shader/line.frag.spv";
+  if (!Pipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdLinePipeline,
+      VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile)) {
+      Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
+      return false;
+  }
+  return true;
 }
 
 bool VkRenderer::createGltfSkeletonPipeline() {
@@ -428,15 +428,6 @@ bool VkRenderer::createCommandBuffer() {
 bool VkRenderer::createSyncObjects() {
   if (!SyncObjects::init(mRenderData)) {
     Logger::log(1, "%s error: could not create sync objects\n", __FUNCTION__);
-    return false;
-  }
-  return true;
-}
-
-bool VkRenderer::loadTexture(VkTextureData& textureData) {
-  std::string textureFileName = "textures/crate.png";
-  if (!Texture::loadTexture(mRenderData, textureData, textureFileName)) {
-    Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
     return false;
   }
   return true;
@@ -942,28 +933,11 @@ bool VkRenderer::draw() {
 
   /* upload UBO data after commands are created */
   mUploadToUBOTimer.start();
-  void* data;
-  vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc,
-    &data);
-  std::memcpy(data, mPerspViewMatrices.data(),
-    static_cast<uint32_t>(mPerspViewMatrices.size() * sizeof(glm::mat4)));
-  vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc);
 
-  if (mModelJointDualQuats.size() > 0) {
-    vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc,
-      &data);
-    std::memcpy(data, mModelJointDualQuats.data(),
-      static_cast<uint32_t>(mModelJointDualQuats.size() * sizeof(glm::mat2x4)));
-    vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc);
-  }
+  UniformBuffer::uploadData(mRenderData, mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices);
 
-  if (mModelJointMatrices.size() > 0) {
-    vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixTBO.rdTboBufferAlloc,
-      &data);
-    std::memcpy(data, mModelJointMatrices.data(),
-      static_cast<uint32_t>(mModelJointMatrices.size() * sizeof(glm::mat4)));
-    vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixTBO.rdTboBufferAlloc);
-  }
+  ShaderStorageBuffer::uploadData(mRenderData, mRenderData.rdJointDualQuatSSBO, mModelJointDualQuats);
+  TexelBuffer::uploadData(mRenderData, mRenderData.rdJointMatrixTBO, mModelJointMatrices);
 
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 

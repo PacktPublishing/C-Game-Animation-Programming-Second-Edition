@@ -1,4 +1,3 @@
-#include <cstring>
 #include <imgui_impl_glfw.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -59,7 +58,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
 
-  if (!createUBO(mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices)) {
+  if (!createUBO()) {
     return false;
   }
 
@@ -68,11 +67,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
 
-  if (!createSSBO(mRenderData.rdJointMatrixSSBO, mGltfModel->getJointMatrices())) {
+  if (!createMatrixSSBO()) {
     return false;
   }
 
-  if (!createSSBO(mRenderData.rdJointDualQuatSSBO, mGltfModel->getJointDualQuats())) {
+  if (!createDQSSBO()) {
     return false;
   }
 
@@ -85,10 +84,6 @@ bool VkRenderer::init(unsigned int width, unsigned int height) {
   }
 
   if (!createPipelineLayout()) {
-    return false;
-  }
-
-  if (!createBasicPipeline()) {
     return false;
   }
 
@@ -319,27 +314,31 @@ bool VkRenderer::createVBO() {
   return true;
 }
 
-bool VkRenderer::createUBO(VkUniformBufferData &UBOData,
-  std::vector<glm::mat4> matricesToUpload) {
-  if (!UniformBuffer::init(mRenderData, UBOData, matricesToUpload)) {
+bool VkRenderer::createUBO() {
+  size_t matrixSize = mPerspViewMatrices.size() * sizeof(glm::mat4);
+  if (!UniformBuffer::init(mRenderData, mRenderData.rdPerspViewMatrixUBO, matrixSize)) {
     Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
     return false;
   }
   return true;
 }
 
-bool VkRenderer::createSSBO(VkShaderStorageBufferData &SSBOData,
-  std::vector<glm::mat4> matricesToUpload) {
-  if (!ShaderStorageBuffer::init(mRenderData, SSBOData, matricesToUpload)) {
+bool VkRenderer::createMatrixSSBO() {
+  size_t matrixSize =
+    mGltfModel->getJointMatrices().size() * sizeof(glm::mat4);
+
+  if (!ShaderStorageBuffer::init(mRenderData, mRenderData.rdJointMatrixSSBO, matrixSize)) {
     Logger::log(1, "%s error: could not create shader storage buffers\n", __FUNCTION__);
     return false;
   }
   return true;
 }
 
-bool VkRenderer::createSSBO(VkShaderStorageBufferData &SSBOData,
-  std::vector<glm::mat2x4> matricesToUpload) {
-  if (!ShaderStorageBuffer::init(mRenderData, SSBOData, matricesToUpload)) {
+bool VkRenderer::createDQSSBO() {
+  size_t matrixSize =
+    mGltfModel->getJointDualQuats().size() * sizeof(glm::mat2x4);
+
+  if (!ShaderStorageBuffer::init(mRenderData, mRenderData.rdJointDualQuatSSBO, matrixSize)) {
     Logger::log(1, "%s error: could not create shader storage buffers\n", __FUNCTION__);
     return false;
   }
@@ -358,17 +357,6 @@ bool VkRenderer::createPipelineLayout() {
   if (!PipelineLayout::init(mRenderData, mRenderData.rdModelTexture,
       mRenderData.rdPipelineLayout)) {
     Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
-    return false;
-  }
-  return true;
-}
-
-bool VkRenderer::createBasicPipeline() {
-  std::string vertexShaderFile = "shader/basic.vert.spv";
-  std::string fragmentShaderFile = "shader/basic.frag.spv";
-  if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline,
-      VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile)) {
-    Logger::log(1, "%s error: could not init basic shader pipeline\n", __FUNCTION__);
     return false;
   }
   return true;
@@ -522,7 +510,6 @@ void VkRenderer::cleanup() {
   GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
   GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
   Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
-  Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
   PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
   Renderpass::cleanup(mRenderData);
   UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspViewMatrixUBO);
@@ -927,24 +914,6 @@ bool VkRenderer::draw() {
   vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1,
     &mRenderData.rdVertexBufferData.rdVertexBuffer, &offset);
 
-  /* draw lines first */
-  /*
-  if (mLineIndexCount > 0) {
-    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-      mRenderData.rdLinePipeline);
-    vkCmdSetLineWidth(mRenderData.rdCommandBuffer, 3.0f);
-    vkCmdDraw(mRenderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
-  }
-  */
-
-  /* draw box model */
-  /*
-  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    mRenderData.rdBasicPipeline);
-  vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1,
-    mLineIndexCount + mSkeletonLineIndexCount, 0);
-  */
-
   /* draw glTF model */
   if (mRenderData.rdDrawGltfModel) {
     mGltfModel->draw(mRenderData, mGltfRenderData);
@@ -979,30 +948,12 @@ bool VkRenderer::draw() {
 
   /* upload UBO data after commands are created */
   mUploadToUBOTimer.start();
-  void* data;
-  vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc,
-    &data);
-  std::memcpy(data, mPerspViewMatrices.data(),
-    static_cast<uint32_t>(mPerspViewMatrices.size() * sizeof(glm::mat4)));
-  vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdPerspViewMatrixUBO.rdUboBufferAlloc);
 
-  if (mRenderData.rdGPUVertexSkinning) {
-    if (mRenderData.rdGPUDualQuatVertexSkinning) {
-      std::vector<glm::mat2x4> jointDualQuats = mGltfModel->getJointDualQuats();
-      vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc,
-        &data);
-      std::memcpy(data, jointDualQuats.data(),
-        static_cast<uint32_t>(jointDualQuats.size() * sizeof(glm::mat2x4)));
-      vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointDualQuatSSBO.rdSsboBufferAlloc);
-    } else {
-      std::vector<glm::mat4> jointMatrices = mGltfModel->getJointMatrices();
-      vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixSSBO.rdSsboBufferAlloc,
-        &data);
-      std::memcpy(data, jointMatrices.data(),
-        static_cast<uint32_t>(jointMatrices.size() * sizeof(glm::mat4)));
-      vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdJointMatrixSSBO.rdSsboBufferAlloc);
-    }
-  }
+  UniformBuffer::uploadData(mRenderData, mRenderData.rdPerspViewMatrixUBO, mPerspViewMatrices);
+
+  ShaderStorageBuffer::uploadData(mRenderData, mRenderData.rdJointDualQuatSSBO, mGltfModel->getJointDualQuats());
+  ShaderStorageBuffer::uploadData(mRenderData, mRenderData.rdJointMatrixSSBO, mGltfModel->getJointMatrices());
+
   mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
   /* submit command buffer */
